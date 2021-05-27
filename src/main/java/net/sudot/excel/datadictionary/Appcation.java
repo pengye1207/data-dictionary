@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
  */
 public class Appcation {
     private static final Pattern PATTERN = Pattern.compile("(/|\\d\\:).*");
-    private static final String CONFIG_FILE = "in-parameter.txt";
+    private static final String CONFIG_FILE = "setting.properties";
 
     public static void main(String[] args) throws Exception {
         Properties properties = new Properties();
