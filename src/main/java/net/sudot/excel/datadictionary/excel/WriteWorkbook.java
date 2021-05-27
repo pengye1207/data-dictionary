@@ -1,3 +1,4 @@
+
 package net.sudot.excel.datadictionary.excel;
 
 import net.sudot.excel.datadictionary.Constant;
@@ -6,6 +7,7 @@ import net.sudot.excel.datadictionary.dao.IDao;
 import net.sudot.excel.datadictionary.dto.InParameter;
 import net.sudot.excel.datadictionary.dto.Table;
 import net.sudot.excel.datadictionary.dto.TableColumn;
+
 import org.apache.poi.common.usermodel.HyperlinkType;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CreationHelper;
@@ -46,7 +48,8 @@ public abstract class WriteWorkbook {
             excludeTables.add(tableName.trim());
         }
 
-        try (Connection connection = DriverManager.getConnection(inParameter.getUrl(), inParameter.getUser(), inParameter.getPassword())) {
+        try (Connection connection =
+            DriverManager.getConnection(inParameter.getUrl(), inParameter.getUser(), inParameter.getPassword())) {
             IDao dao = DaoFactory.newInstance(connection, excludeTables);
             List<Table> tables = dao.listTables(inParameter.getSchema());
             List<String> tableNames = tables.stream().map(Table::getName).collect(Collectors.toList());
@@ -67,7 +70,7 @@ public abstract class WriteWorkbook {
      * 绘制表目录
      *
      * @param workbook 工作表实例
-     * @param tables   数据表信息
+     * @param tables 数据表信息
      * @return 工作表实例
      */
     public static Workbook drawCatalogue(Workbook workbook, List<Table> tables) {
@@ -89,8 +92,10 @@ public abstract class WriteWorkbook {
             cell.setCellValue(table.getName());
             row.createCell(1).setCellValue(table.getComment());
 
-            columnTextLengthMap.put(0, CellUtils.calcColumnTextLength(table.getName(), columnTextLengthMap.getOrDefault(0, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
-            columnTextLengthMap.put(1, CellUtils.calcColumnTextLength(table.getComment(), columnTextLengthMap.getOrDefault(0, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+            columnTextLengthMap.put(0, CellUtils.calcColumnTextLength(table.getName(),
+                columnTextLengthMap.getOrDefault(0, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+            columnTextLengthMap.put(1, CellUtils.calcColumnTextLength(table.getComment(),
+                columnTextLengthMap.getOrDefault(0, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
         }
         for (Map.Entry<Integer, Integer> entry : columnTextLengthMap.entrySet()) {
             sheet.setColumnWidth(entry.getKey(), 255 * entry.getValue());
@@ -101,41 +106,72 @@ public abstract class WriteWorkbook {
     /**
      * 绘制每一个数据表的字段信息
      *
-     * @param workbook     工作表实例
-     * @param tables       数据表信息
+     * @param workbook 工作表实例
+     * @param tables 数据表信息
      * @param tableColumns 数据表字段信息
      * @return 工作表实例
      */
-    public static Workbook drawTableColumns(Workbook workbook, List<Table> tables, Map<String, List<TableColumn>> tableColumns) {
+    public static Workbook drawTableColumns(Workbook workbook, List<Table> tables,
+        Map<String, List<TableColumn>> tableColumns) {
         tables.forEach(table -> {
             List<TableColumn> columnList = tableColumns.get(table.getName());
-            if (columnList == null) { return; }
+            if (columnList == null) {
+                return;
+            }
             Map<Integer, Integer> columnTextLengthMap = new HashMap<>();
             Sheet sheet = drawTablesSheetHeader(workbook, table);
             int dataRowIndex = 3;
             Row headerRow = sheet.createRow(dataRowIndex++);
             int firstCellIndex = -1;
             CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex)).setCellValue("序号\r\nSeq.");
-            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex)).setCellValue("字段名\r\nName");
-            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex)).setCellValue("字段类型\r\nType");
-            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex)).setCellValue("主键\r\nPrimary");
-            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex)).setCellValue("唯一\r\nUnique");
-            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex)).setCellValue("空值\r\nNullable");
-            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex)).setCellValue("缺省\r\nDefault");
-            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex)).setCellValue("注释\r\nComments");
+            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex))
+                .setCellValue("字段名\r\nName");
+            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex))
+                .setCellValue("字段类型\r\nType");
+            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex))
+                .setCellValue("主键\r\nPrimary");
+            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex))
+                .setCellValue("索引名\r\nIndex");
+            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex))
+                .setCellValue("唯一索引\r\nUnique");
+            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex))
+                .setCellValue("空值\r\nNullable");
+            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex))
+                .setCellValue("缺省\r\nDefault");
+            CellUtils.addCellStyleAtHeader(workbook, headerRow.createCell(++firstCellIndex))
+                .setCellValue("注释\r\nComments");
             Iterator<TableColumn> iterator = columnList.iterator();
             for (int rowIndex = dataRowIndex; iterator.hasNext(); rowIndex++) {
                 firstCellIndex = -1;
                 TableColumn column = iterator.next();
                 Row row = sheet.createRow(rowIndex);
-                columnTextLengthMap.put(++firstCellIndex, CellUtils.drawColumnText(row, firstCellIndex, String.valueOf(rowIndex - dataRowIndex + 1), columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
-                columnTextLengthMap.put(++firstCellIndex, CellUtils.drawColumnText(row, firstCellIndex, column.getColumnName(), columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
-                columnTextLengthMap.put(++firstCellIndex, CellUtils.drawColumnText(row, firstCellIndex, column.getColumnType(), columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
-                columnTextLengthMap.put(++firstCellIndex, CellUtils.drawColumnText(row, firstCellIndex, column.getColumnKey(), columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
-                columnTextLengthMap.put(++firstCellIndex, CellUtils.drawColumnText(row, firstCellIndex, column.getColumnUnique(), columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
-                columnTextLengthMap.put(++firstCellIndex, CellUtils.drawColumnText(row, firstCellIndex, column.getIsNullable(), columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
-                columnTextLengthMap.put(++firstCellIndex, CellUtils.drawColumnText(row, firstCellIndex, column.getColumnDefault(), columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
-                columnTextLengthMap.put(++firstCellIndex, CellUtils.drawColumnText(row, firstCellIndex, column.getColumnComment(), columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, String.valueOf(rowIndex - dataRowIndex + 1),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, column.getColumnName(),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, column.getColumnType(),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, column.getColumnKey(),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, column.getIndexName(),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, column.getColumnUnique(),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, column.getIsNullable(),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, column.getColumnDefault(),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
+                columnTextLengthMap.put(++firstCellIndex,
+                    CellUtils.drawColumnText(row, firstCellIndex, column.getColumnComment(),
+                        columnTextLengthMap.getOrDefault(firstCellIndex, Constant.DEFAULT_COLUMN_TEXT_LENGTH)));
             }
             for (Map.Entry<Integer, Integer> entry : columnTextLengthMap.entrySet()) {
                 sheet.setColumnWidth(entry.getKey(), 255 * entry.getValue());
@@ -148,40 +184,45 @@ public abstract class WriteWorkbook {
      * 绘制表格字段详情头信息
      *
      * @param workbook 表格
-     * @param table    表信息
+     * @param table 表信息
      * @return 返回工作薄实例
      */
     public static Sheet drawTablesSheetHeader(Workbook workbook, Table table) {
         Sheet sheet = workbook.createSheet(table.getName());
         int rowIndex = -1;
         int mergedLastCellIndex = 7;
-        {
-            Row row = sheet.createRow(++rowIndex);
-            row.createCell(0).setCellValue("表名");
-            row.createCell(1).setCellValue(table.getName());
-            sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 1, mergedLastCellIndex));
-
-            CreationHelper createHelper = workbook.getCreationHelper();
-            Hyperlink hyperlink = createHelper.createHyperlink(HyperlinkType.DOCUMENT);
-            hyperlink.setAddress(String.format("%s!A1", Constant.HOME_SHEET_NAME));
-            Cell cell = row.createCell(mergedLastCellIndex + 1);
-            cell.setCellValue("返回首页");
-            cell.setHyperlink(hyperlink);
-        }
-
-        {
-            Row row = sheet.createRow(++rowIndex);
-            row.createCell(0).setCellValue("注释");
-            row.createCell(1).setCellValue(table.getComment());
-            sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 1, mergedLastCellIndex));
-        }
-
-        {
-            Row row = sheet.createRow(++rowIndex);
-            row.createCell(0).setCellValue("详细说明");
-            sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 1, mergedLastCellIndex));
-        }
+        rowIndex = getRowIndex(workbook, table, sheet, ++rowIndex, mergedLastCellIndex);
+        rowIndex = drawComment(table, sheet, ++rowIndex, mergedLastCellIndex);
+        drawDetail(sheet, ++rowIndex, mergedLastCellIndex);
         return sheet;
     }
 
+    private static void drawDetail(Sheet sheet, int rowIndex, int mergedLastCellIndex) {
+        Row row = sheet.createRow(rowIndex);
+        row.createCell(0).setCellValue("详细说明");
+        sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 1, mergedLastCellIndex));
+    }
+
+    private static int drawComment(Table table, Sheet sheet, int rowIndex, int mergedLastCellIndex) {
+        Row row = sheet.createRow(rowIndex);
+        row.createCell(0).setCellValue("注释");
+        row.createCell(1).setCellValue(table.getComment());
+        sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 1, mergedLastCellIndex));
+        return rowIndex;
+    }
+
+    private static int getRowIndex(Workbook workbook, Table table, Sheet sheet, int rowIndex, int mergedLastCellIndex) {
+        Row row = sheet.createRow(rowIndex);
+        row.createCell(0).setCellValue("表名");
+        row.createCell(1).setCellValue(table.getName());
+        sheet.addMergedRegion(new CellRangeAddress(rowIndex, rowIndex, 1, mergedLastCellIndex));
+
+        CreationHelper createHelper = workbook.getCreationHelper();
+        Hyperlink hyperlink = createHelper.createHyperlink(HyperlinkType.DOCUMENT);
+        hyperlink.setAddress(String.format("%s!A1", Constant.HOME_SHEET_NAME));
+        Cell cell = row.createCell(mergedLastCellIndex + 1);
+        cell.setCellValue("返回首页");
+        cell.setHyperlink(hyperlink);
+        return rowIndex;
+    }
 }
