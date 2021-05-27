@@ -21,6 +21,8 @@ public class TableColumn {
     private String columnType;
     /** 主键 */
     private String columnKey;
+    /** 索引名 */
+    private String indexName;
     /** 唯一 */
     private String columnUnique;
     /** 空值 */
